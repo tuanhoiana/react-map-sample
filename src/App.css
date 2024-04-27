@@ -41,6 +41,7 @@
   color: #888;
 }
 
-
 /* New Css for demo */
-.form label {display: block}
+.form label {
+  display: block;
+}
