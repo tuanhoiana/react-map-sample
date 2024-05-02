@@ -1,0 +1,2 @@
+GET http://localhost:4000/result
+Content-Type: application/json

@@ -20,13 +20,13 @@ import {
   DirectionsRenderer,
 } from '@react-google-maps/api'
 import { useEffect, useRef, useState } from 'react'
+import { getHistory, getRealtime } from './services/api'
 
 const center = { lat: 16.05435, lng: 108.20848 } // Get lat and lang from realtime API
 
 function App() {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: 'AIzaSyAgfBxBAvW9QUFfrUbqu-f3HTuRYG0j3wE', // Config to env
-
+    googleMapsApiKey: 'AIzaSyBVYfY7RTU72W6WgknqdD6gvfgaT-GnmeY', // Config to env
     libraries: ['places'],
   })
 
@@ -38,13 +38,40 @@ function App() {
   const originRef = useRef<HTMLDivElement>()
   /** @type React.MutableRefObject<HTMLInputElement> */
   const destiantionRef = useRef<HTMLDivElement | null>(null)
+  const [histories, setHistories] = useState([])
+
+  // Call api history
+  useEffect(() => {
+    const fetchHistories = async () => {
+      console.log('log1')
+      const data = await getHistory()
+      console.log('log2', data.result.routes[0])
+      setHistories(data)
+    }
+
+    fetchHistories()
+  }, [])
+
+  // Call api realtime
+  useEffect(() => {
+    const fetchRealtime = async () => {
+      console.log('realtime')
+      const data = await getRealtime()
+      // console.log('log2', data.result.routes[0])
+      console.log("reatime2", data.result[0].lat, data.result[0].lng)
+      setHistories(data)
+    }
+
+    fetchRealtime()
+  }, [])
+
 
   if (!isLoaded) {
     return <SkeletonText />
   }
 
   // Calculate route
-  async function calculateRoute() {
+  const calculateRoute = async()=> {
     if (originRef.current.value === '' || destiantionRef.current.value === '') {
       return
     }
@@ -68,8 +95,6 @@ function App() {
     originRef.current.value = ''
     destiantionRef.current.value = ''
   }
-
-  function getlangLongFromAPi() {}
 
   return (
     <Flex
@@ -130,6 +155,13 @@ function App() {
                 placeholder="Destination - Bus stop"
                 ref={destiantionRef}
               />
+              {/* <Select placeholder="Distination - Bus stop">
+                {histories.map((item, index) => (
+                  <option key={index} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </Select> */}
             </Autocomplete>
           </Box>
 
