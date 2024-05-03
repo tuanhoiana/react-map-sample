@@ -26,24 +26,25 @@ const center = { lat: 16.05435, lng: 108.20848 } // Get lat and lang from realti
 
 function App() {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: 'AIzaSyBVYfY7RTU72W6WgknqdD6gvfgaT-GnmeY', // Config to env
+    googleMapsApiKey: 'AIzaSyCrXHAD0DsyKqm-5uP7_Hi4t9yWMhyqe2g', // Config to env
     libraries: ['places'],
   })
 
   const [map, setMap] = useState(/** @type google.maps.Map */ null)
+  
   const [directionsResponse, setDirectionsResponse] = useState(null)
   const [distance, setDistance] = useState('')
   const [duration, setDuration] = useState('')
-  // @type = { current: HTMLDivElement | undefined }
-  const originRef = useRef<HTMLDivElement>()
   /** @type React.MutableRefObject<HTMLInputElement> */
-  const destiantionRef = useRef<HTMLDivElement | null>(null)
+  const originRef = useRef()
+  /** @type React.MutableRefObject<HTMLInputElement> */
+  const destiantionRef = useRef()
   const [histories, setHistories] = useState([])
+  const [realtime, setRealtime] = useState([])
 
   // Call api history
   useEffect(() => {
     const fetchHistories = async () => {
-      console.log('log1')
       const data = await getHistory()
       console.log('log2', data.result.routes[0])
       setHistories(data)
@@ -52,38 +53,55 @@ function App() {
     fetchHistories()
   }, [])
 
-  // Call api realtime
-  useEffect(() => {
+  // Call api realtime 
+  useEffect(() => { // TODO: try catch error
     const fetchRealtime = async () => {
       console.log('realtime')
       const data = await getRealtime()
-      // console.log('log2', data.result.routes[0])
-      console.log("reatime2", data.result[0].lat, data.result[0].lng)
-      setHistories(data)
+      console.log("logggg2", data)
+      setRealtime(data)
     }
 
     fetchRealtime()
   }, [])
 
-
   if (!isLoaded) {
     return <SkeletonText />
   }
 
+  // Prepare bus stops - Fake datas
+  const busStops = [
+    {
+      location:
+        'Bệnh Viện Phụ Sản - Nhi Đà Nẵng, Đường Lê Văn Hiến, Khuê Mỹ, Ngũ Hành Sơn, Da Nang, Vietnam',
+    },
+    {
+      location:
+        'Trường Đại học Kiến trúc Đà Nẵng, Núi Thành, Hòa Cường, Hòa Cường Nam, Hải Châu District, Da Nang, Vietnam',
+    },
+    {
+      location:
+        'Bệnh Viện Quân Y C17, Nguyễn Hữu Thọ, Hòa Thuận Tây, Hải Châu District, Da Nang, Vietnam',
+    },
+  ]
+
   // Calculate route
-  const calculateRoute = async()=> {
-    if (originRef.current.value === '' || destiantionRef.current.value === '') {
+  const handleCalculateAndDisplayRoute = async () => {
+    if (originRef.current === null || destiantionRef.current === null) {
       return
     }
+
     // eslint-disable-next-line no-undef
     const directionsService = new google.maps.DirectionsService()
     const results = await directionsService.route({
-      origin: originRef.current.value,
-      destination: destiantionRef.current.value,
+      origin: originRef.current.value, // Start point
+      waypoints: busStops,
+      destination: destiantionRef.current.value, // End point
       // eslint-disable-next-line no-undef
       travelMode: google.maps.TravelMode.DRIVING,
     })
     console.log('myResult', results)
+    setDirectionsResponse(results)
     setDistance(results.routes[0].legs[0].distance.text)
     setDuration(results.routes[0].legs[0].duration?.text)
   }
@@ -121,7 +139,7 @@ function App() {
           <Marker position={center} />
           {directionsResponse && (
             <DirectionsRenderer directions={directionsResponse} />
-          )}
+           )} 
         </GoogleMap>
       </Box>
       <Box
@@ -156,17 +174,21 @@ function App() {
                 ref={destiantionRef}
               />
               {/* <Select placeholder="Distination - Bus stop">
-                {histories.map((item, index) => (
-                  <option key={index} value={item}>
-                    {item}
+                {busStops.map((busStop, index) => (
+                <option key={index} value={busStop.location}>
+                    {busStop.location}
                   </option>
-                ))}
-              </Select> */}
+                ))} */}
+              {/* </Select> */}
             </Autocomplete>
           </Box>
 
           <ButtonGroup>
-            <Button colorScheme="blue" type="submit" onClick={calculateRoute}>
+            <Button
+              colorScheme="blue"
+              type="submit"
+              onClick={handleCalculateAndDisplayRoute}
+            >
               Calculate Route
             </Button>
             <IconButton
